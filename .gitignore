@@ -88,3 +88,4 @@ test.py
 notebook/
 test.sh
 *.ipynb
+test_image*

@@ -1,6 +1,7 @@
 from langfuse import Langfuse
 from tamatai.config import Settings
-
+from pdf2image import convert_from_bytes
+import base64
 from pydantic import BaseModel, Field
 
 def structure_output(config):
@@ -30,24 +31,51 @@ def load_prompt(settings: Settings, langfuse: Langfuse):
 
     return prompt
 
-def format_messages(prompt, image_base64):
-    messages = [
+def image_to_base64(image: bytes):
+    image_base64 = base64.b64encode(image).decode('utf-8')
+    return image_base64
+
+def pdf_to_image_base64(pdf: bytes):
+    images = convert_from_bytes(pdf)
+
+    images_base64 = []
+
+    for image in images:
+        image_base64 = image_to_base64(image.tobytes())
+        images_base64.append(image_base64)
+
+    return images_base64
+
+def format_messages(job_post: str, images_base64: list):
+
+    image_messages = [
         {
-            "role": "system",
-            "content": prompt,
-        },
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/png;base64,{image_base64}",
+            },
+        } for image_base64 in images_base64
+    ]
+
+    messages = [
         {
             "role": "user",
             "content": [
                 {
                     "type": "text",
-                    "text": "Extract the following image data",
+                    "text": "Extract the following job post"
                 },
                 {
-                    "type": "image",
-                    "base64": image_base64,
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/png;base64,{job_post}",
+                    },
                 },
-            ]
+                {
+                    "type": "text",
+                    "text": "Matching with Curiculum Vitae",
+                }
+            ] + image_messages
         }
     ]
 
