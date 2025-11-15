@@ -11,14 +11,14 @@ def load_match() -> Match:
 def main() -> None:
     st.set_page_config(page_title="TalentMatchAI", page_icon="🤝")
     st.title("TalentMatchAI Matcher")
-    st.write("Upload a job post image and one or more CV files to run the matcher.")
+    st.write("Upload a job post PDF and one or more CV files to run the matcher.")
 
     with st.form("match-form"):
         job_post_file = st.file_uploader(
-            "Upload job post image",
-            type=["png", "jpg", "jpeg", "bmp", "gif"],
+            "Upload job post PDF",
+            type=["pdf"],
             accept_multiple_files=False,
-            help="Supported formats: PNG, JPG, JPEG, BMP, GIF"
+            help="Only PDF job posts are supported"
         )
         cv_files = st.file_uploader(
             "Upload CV files",
@@ -28,19 +28,27 @@ def main() -> None:
         )
         submit = st.form_submit_button("Process")
 
+    job_post_bytes = None
+    if job_post_file is not None:
+        job_post_bytes = job_post_file.getvalue()
+        if job_post_bytes:
+            st.markdown("#### Job Post Preview")
+            st.pdf(job_post_bytes)
+        else:
+            job_post_bytes = None
+
     if submit:
-        if job_post_file is None:
-            st.error("Please upload a job post image before processing.")
+        if job_post_bytes is None:
+            st.error("Please upload a job post PDF before processing.")
             return
         if not cv_files:
             st.error("Please upload at least one CV file before processing.")
             return
 
-        job_post_bytes = job_post_file.getvalue()
         cv_bytes_list = [cv_file.getvalue() for cv_file in cv_files]
 
         if not job_post_bytes:
-            st.error("Uploaded job post file is empty.")
+            st.error("Uploaded job post PDF is empty.")
             return
         if any(not cv_bytes for cv_bytes in cv_bytes_list):
             st.error("One or more uploaded CV files are empty.")
@@ -51,9 +59,41 @@ def main() -> None:
         results = matcher.bulk(job_post_bytes, cv_bytes_list)
 
         st.success("Processing completed.")
-        for idx, result in enumerate(results, start=1):
-            st.subheader(f"Result for CV #{idx}")
-            st.json(result)
+
+        def parse_score(value: object) -> float:
+            if isinstance(value, (int, float)):
+                return float(value)
+            if isinstance(value, str):
+                try:
+                    return float(value)
+                except ValueError:
+                    cleaned = "".join(ch for ch in value if ch.isdigit() or ch == ".")
+                    try:
+                        return float(cleaned)
+                    except ValueError:
+                        return 0.0
+            return 0.0
+
+        sorted_results = sorted(
+            results,
+            key=lambda result: parse_score(result.get("score")),
+            reverse=True,
+        )
+
+        table_rows = []
+        for idx, result in enumerate(sorted_results, start=1):
+            table_rows.append(
+                {
+                    "CV #": idx,
+                    "Name": result.get("name", "-"),
+                    "Role": result.get("role", "-"),
+                    "Years of Experience": result.get("year_experience", "-"),
+                    "Score": result.get("score", "-"),
+                    "Summary": result.get("summary", "-"),
+                }
+            )
+
+        st.dataframe(table_rows, use_container_width=True)
 
 
 if __name__ == "__main__":
