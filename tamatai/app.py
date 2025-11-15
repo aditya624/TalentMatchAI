@@ -48,11 +48,7 @@ def main() -> None:
 
         st.info("Processing files. This may take a moment...")
         matcher = load_match()
-        try:
-            results = matcher.bulk(job_post_bytes, cv_bytes_list)
-        except Exception as exc:  # noqa: BLE001 - Surface errors to the UI
-            st.error(f"An error occurred while processing the files: {exc}")
-            return
+        results = matcher.bulk(job_post_bytes, cv_bytes_list)
 
         st.success("Processing completed.")
         for idx, result in enumerate(results, start=1):

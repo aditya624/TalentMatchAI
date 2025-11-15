@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field
 
 from tamatai.config import Settings
 
+from io import BytesIO
+
 def structure_output(config):
     description = config["description"]
     class Ranking(BaseModel):
@@ -44,7 +46,10 @@ def pdf_to_image_base64(pdf_path: str | Path):
     images_base64 = []
 
     for image in images:
-        image_base64 = image_to_base64(image.tobytes())
+        image = image.resize((int(image.width * 0.5), int(image.height * 0.5)))
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        image_base64 = image_to_base64(buffered.getvalue())
         images_base64.append(image_base64)
 
     return images_base64
@@ -55,7 +60,7 @@ def format_messages(job_post: str, images_base64: list):
         {
             "type": "image_url",
             "image_url": {
-                "url": f"data:image/png;base64,{image_base64}",
+                "url": f"data:image/jpeg;base64,{image_base64}",
             },
         } for image_base64 in images_base64
     ]
