@@ -1,8 +1,11 @@
-from langfuse import Langfuse
-from tamatai.config import Settings
-from pdf2image import convert_from_bytes
+from pathlib import Path
 import base64
+
+from langfuse import Langfuse
+from pdf2image import convert_from_path
 from pydantic import BaseModel, Field
+
+from tamatai.config import Settings
 
 def structure_output(config):
     description = config["description"]
@@ -35,8 +38,8 @@ def image_to_base64(image: bytes):
     image_base64 = base64.b64encode(image).decode('utf-8')
     return image_base64
 
-def pdf_to_image_base64(pdf: bytes):
-    images = convert_from_bytes(pdf)
+def pdf_to_image_base64(pdf_path: str | Path):
+    images = convert_from_path(str(pdf_path))
 
     images_base64 = []
 
