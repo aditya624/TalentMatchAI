@@ -6,7 +6,7 @@ from langfuse import Langfuse
 from langchain.agents import create_agent
 
 from tamatai.config import settings
-from tamatai.chain.helper import (
+from tamatai.agent.helper import (
     load_prompt, structure_output, format_messages,
     pdf_to_image_base64,
     image_to_base64
@@ -27,7 +27,6 @@ class Match(object):
                 api_key=settings.groq.api_key
             ),
             system_prompt=self.prompt["match"]["prompt"],
-            tools=[],
             response_format=structure_output(config=self.prompt["match"]["config"])
         )
 

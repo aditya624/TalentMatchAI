@@ -1,6 +1,6 @@
 import streamlit as st
 
-from tamatai.chain.match import Match
+from tamatai.agent.match import Match
 
 
 @st.cache_resource(show_spinner=False)
