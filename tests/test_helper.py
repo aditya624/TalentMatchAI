@@ -1,6 +1,6 @@
 import base64
 
-from tamatai.chain import helper
+from tamatai.agent import helper
 
 
 def test_structure_output_creates_pydantic_model():
