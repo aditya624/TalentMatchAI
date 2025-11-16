@@ -1,8 +1,13 @@
-from langfuse import Langfuse
-from tamatai.config import Settings
-from pdf2image import convert_from_bytes
+from pathlib import Path
 import base64
+
+from langfuse import Langfuse
+from pdf2image import convert_from_path
 from pydantic import BaseModel, Field
+
+from tamatai.config import Settings
+
+from io import BytesIO
 
 def structure_output(config):
     description = config["description"]
@@ -35,26 +40,38 @@ def image_to_base64(image: bytes):
     image_base64 = base64.b64encode(image).decode('utf-8')
     return image_base64
 
-def pdf_to_image_base64(pdf: bytes):
-    images = convert_from_bytes(pdf)
+def pdf_to_image_base64(pdf_path: str | Path):
+    images = convert_from_path(str(pdf_path))
 
     images_base64 = []
 
     for image in images:
-        image_base64 = image_to_base64(image.tobytes())
+        image = image.resize((int(image.width * 0.5), int(image.height * 0.5)))
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        image_base64 = image_to_base64(buffered.getvalue())
         images_base64.append(image_base64)
 
     return images_base64
 
-def format_messages(job_post: str, images_base64: list):
+def format_messages(job_post: list, images_base64: list):
 
-    image_messages = [
+    image_messages_cv = [
         {
             "type": "image_url",
             "image_url": {
-                "url": f"data:image/png;base64,{image_base64}",
+                "url": f"data:image/jpeg;base64,{image_base64}",
             },
         } for image_base64 in images_base64
+    ]
+
+    image_messages_job = [
+        {
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/jpeg;base64,{image_base64}",
+            },
+        } for image_base64 in job_post
     ]
 
     messages = [
@@ -65,17 +82,16 @@ def format_messages(job_post: str, images_base64: list):
                     "type": "text",
                     "text": "Extract the following job post"
                 },
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/png;base64,{job_post}",
-                    },
-                },
+            ] 
+            + image_messages_job 
+            + [
+                
                 {
                     "type": "text",
                     "text": "Matching with Curiculum Vitae",
                 }
-            ] + image_messages
+            ] 
+            + image_messages_cv
         }
     ]
 

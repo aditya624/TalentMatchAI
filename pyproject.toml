@@ -1,6 +1,6 @@
 [project]
 name = "tamatai"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = [
     {name = "aditya624",email = "adityaadit677@gmail.com"}
@@ -14,6 +14,7 @@ dependencies = [
     "langfuse (>=3.9.1,<4.0.0)",
     "langchain-groq (==1.0.0)",
     "pdf2image (>=1.17.0,<2.0.0)",
+    "streamlit[pdf] (>=1.51.0,<2.0.0)",
 ]
 
 
