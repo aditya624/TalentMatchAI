@@ -60,23 +60,9 @@ def main() -> None:
 
         st.success("Processing completed.")
 
-        def parse_score(value: object) -> float:
-            if isinstance(value, (int, float)):
-                return float(value)
-            if isinstance(value, str):
-                try:
-                    return float(value)
-                except ValueError:
-                    cleaned = "".join(ch for ch in value if ch.isdigit() or ch == ".")
-                    try:
-                        return float(cleaned)
-                    except ValueError:
-                        return 0.0
-            return 0.0
-
         sorted_results = sorted(
             results,
-            key=lambda result: parse_score(result.get("score")),
+            key=lambda result: result.get("score"),
             reverse=True,
         )
 

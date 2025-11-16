@@ -54,15 +54,24 @@ def pdf_to_image_base64(pdf_path: str | Path):
 
     return images_base64
 
-def format_messages(job_post: str, images_base64: list):
+def format_messages(job_post: list, images_base64: list):
 
-    image_messages = [
+    image_messages_cv = [
         {
             "type": "image_url",
             "image_url": {
                 "url": f"data:image/jpeg;base64,{image_base64}",
             },
         } for image_base64 in images_base64
+    ]
+
+    image_messages_job = [
+        {
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/jpeg;base64,{image_base64}",
+            },
+        } for image_base64 in job_post
     ]
 
     messages = [
@@ -73,17 +82,16 @@ def format_messages(job_post: str, images_base64: list):
                     "type": "text",
                     "text": "Extract the following job post"
                 },
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/png;base64,{job_post}",
-                    },
-                },
+            ] 
+            + image_messages_job 
+            + [
+                
                 {
                     "type": "text",
                     "text": "Matching with Curiculum Vitae",
                 }
-            ] + image_messages
+            ] 
+            + image_messages_cv
         }
     ]
 
