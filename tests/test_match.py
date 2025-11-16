@@ -1,7 +1,7 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from tamatai.chain.match import Match
+from tamatai.agent.match import Match
 
 
 def test_bulk_invokes_scoring_and_returns_results(tmp_path):
@@ -12,7 +12,7 @@ def test_bulk_invokes_scoring_and_returns_results(tmp_path):
     job_post = b"job"
     files = [b"cv-1", b"cv-2"]
 
-    with patch("tamatai.chain.match.pdf_to_image_base64", return_value=["job-image"]) as pdf_mock:
+    with patch("tamatai.agent.match.pdf_to_image_base64", return_value=["job-image"]) as pdf_mock:
         results = Match.bulk(match, job_post, files)
 
     assert results == [{"score": 0.7}, {"score": 0.9}]

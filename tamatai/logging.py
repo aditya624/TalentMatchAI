@@ -1,7 +1,7 @@
 import logging, sys
 
 def init_logger():
-    logger = logging.getLogger("orion")
+    logger = logging.getLogger("tamatai")
     logger.setLevel(logging.INFO)
     handler = logging.StreamHandler(sys.stdout)
     fmt = logging.Formatter(
