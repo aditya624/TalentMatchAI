@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from langchain_groq import ChatGroq
 from langfuse import Langfuse
+from langfuse.langchain import CallbackHandler
 from langchain.agents import create_agent
 
 from tamatai.config import settings
@@ -34,7 +35,9 @@ class Match(object):
         # job_post_base64 = image_to_base64(job_post)
         image_base64 = pdf_to_image_base64(file_path)
         messages = format_messages(job_post_base64, image_base64)
-        output = self.agent.invoke({"messages": messages})
+        output = self.agent.invoke(
+            {"messages": messages},config={"callbacks": [CallbackHandler()]}
+        )
         result = output["structured_response"]
         return result.model_dump()
 
