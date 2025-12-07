@@ -89,3 +89,4 @@ notebook/
 test.sh
 *.ipynb
 test_image*
+pytest-coverage.txt
