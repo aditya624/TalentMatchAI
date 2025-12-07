@@ -11,7 +11,7 @@ from tamatai.agent.helper import (
     load_prompt, structure_output, format_messages,
     pdf_to_image_base64,
 )
-from tamatai.agent.middleware import GroqRetryThenOpenAI
+from tamatai.agent.middleware import ModelRouterMiddleware
 
 class Match(object):
     def __init__(self):
@@ -28,7 +28,7 @@ class Match(object):
             system_prompt=self.prompt["match"]["prompt"],
             response_format=structure_output(config=self.prompt["match"]["config"]),
             middleware=[
-                GroqRetryThenOpenAI(
+                ModelRouterMiddleware(
                     fallback_model_name=self.prompt["match"]["config"].get("fallback_model", "gpt-5")
                 )
             ],

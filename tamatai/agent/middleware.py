@@ -9,20 +9,16 @@ from tamatai.config import settings
 logger = logging.getLogger(__name__)
 
 
-class GroqRetryThenOpenAI(AgentMiddleware):
+class ModelRouterMiddleware(AgentMiddleware):
     """
     Middleware class to retry Groq then fall back to an OpenAI model.
-
-    The original request.model is assumed to be a Groq model. We try up to the configured
-    retry_count; if all attempts fail, we swap in the provided OpenAI model name and let
-    the handler run once.
     """
 
     def __init__(self, fallback_model_name: str = "gpt-5"):
         self.fallback_model_name = fallback_model_name
 
     def wrap_model_call(
-        self,  # type: ignore[override]
+        self, 
         request: ModelRequest,
         handler: Callable[[ModelRequest], ModelResponse],
     ) -> ModelResponse:
@@ -31,9 +27,8 @@ class GroqRetryThenOpenAI(AgentMiddleware):
 
         for attempt in range(retries):
             try:
-                raise
                 return handler(request)
-            except Exception as exc:  # noqa: BLE001 - we want to catch anything from model call
+            except Exception as exc:
                 last_error = exc
                 logger.warning("Groq call failed (attempt %s/%s): %s", attempt + 1, retries, exc)
 
@@ -46,8 +41,7 @@ class GroqRetryThenOpenAI(AgentMiddleware):
 
         try:
             return handler(request.override(model=fallback_model))
-        except Exception as exc:  # noqa: BLE001
-            # Preserve the original Groq failure context while surfacing the fallback error.
+        except Exception as exc:
             raise RuntimeError(
                 f"Groq failed after {retries} attempt(s) and fallback to OpenAI model '{self.fallback_model_name}' also failed"
             ) from (
