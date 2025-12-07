@@ -6,10 +6,14 @@ load_dotenv()
 
 class GroqConfig(BaseModel):
     api_key: str = os.getenv("GROQ_API_KEY", "")
+    retry_count: int = int(os.getenv("GROQ_RETRY_COUNT", "2"))
 
 class LangfuseConfig(BaseModel):
     system_prompt_name: str = os.getenv("LANGFUSE_SYSTEM_PROMPT_NAME", "match")
     system_prompt_version: str = os.getenv("LANGFUSE_SYSTEM_PROMPT_VERSION", None)
+
+class OpenAIConfig(BaseModel):
+    api_key: str = os.getenv("OPENAI_API_KEY", "")
 
 class Settings(BaseModel):
     app_name: str = os.getenv("APP_NAME", "orion")
@@ -20,5 +24,6 @@ class Settings(BaseModel):
     
     groq: GroqConfig = GroqConfig()
     langfuse: LangfuseConfig = LangfuseConfig()
+    openai: OpenAIConfig = OpenAIConfig()
 
 settings = Settings()
