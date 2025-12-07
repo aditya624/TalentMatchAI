@@ -10,10 +10,8 @@ from tamatai.config import settings
 from tamatai.agent.helper import (
     load_prompt, structure_output, format_messages,
     pdf_to_image_base64,
-    image_to_base64
 )
-
-from pdf2image import convert_from_bytes
+from tamatai.agent.middleware import ModelRouterMiddleware
 
 class Match(object):
     def __init__(self):
@@ -28,11 +26,15 @@ class Match(object):
                 api_key=settings.groq.api_key
             ),
             system_prompt=self.prompt["match"]["prompt"],
-            response_format=structure_output(config=self.prompt["match"]["config"])
+            response_format=structure_output(config=self.prompt["match"]["config"]),
+            middleware=[
+                ModelRouterMiddleware(
+                    fallback_model_name=self.prompt["match"]["config"].get("fallback_model", "gpt-5")
+                )
+            ],
         )
 
     def scoring(self, job_post_base64: list, file_path: Path):
-        # job_post_base64 = image_to_base64(job_post)
         image_base64 = pdf_to_image_base64(file_path)
         messages = format_messages(job_post_base64, image_base64)
         output = self.agent.invoke(
