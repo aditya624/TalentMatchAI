@@ -5,6 +5,7 @@ from langchain_groq import ChatGroq
 from langfuse import Langfuse
 from langfuse.langchain import CallbackHandler
 from langchain.agents import create_agent
+from langchain_openai import ChatOpenAI
 
 from tamatai.config import settings
 from tamatai.agent.helper import (
@@ -19,7 +20,7 @@ class Match(object):
         self.prompt = load_prompt(settings, self.langfuse)
         self.tmp_dir = Path("./tmp")
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
-        
+
         self.agent = create_agent(
             model=ChatGroq(
                 model=self.prompt["match"]["config"]["model"],
@@ -29,7 +30,10 @@ class Match(object):
             response_format=structure_output(config=self.prompt["match"]["config"]),
             middleware=[
                 ModelRouterMiddleware(
-                    fallback_model_name=self.prompt["match"]["config"].get("fallback_model", "gpt-5")
+                    fallback_model=ChatOpenAI(
+                        model=self.prompt["match"]["config"].get("fallback_model", "gpt-5"), 
+                        api_key=settings.openai.api_key
+                    )
                 )
             ],
         )
