@@ -2,7 +2,7 @@ import logging
 from typing import Callable
 
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
-from langchain_openai import ChatOpenAI
+from langchain_core.language_models.chat_models import BaseChatModel
 
 from tamatai.config import settings
 
@@ -11,14 +11,14 @@ logger = logging.getLogger(__name__)
 
 class ModelRouterMiddleware(AgentMiddleware):
     """
-    Middleware class to retry Groq then fall back to an OpenAI model.
+    Middleware class to retry Groq then fall back to a provided OpenAI model instance.
     """
 
-    def __init__(self, fallback_model_name: str = "gpt-5"):
-        self.fallback_model_name = fallback_model_name
+    def __init__(self, fallback_model: BaseChatModel):
+        self.fallback_model = fallback_model
 
     def wrap_model_call(
-        self, 
+        self,
         request: ModelRequest,
         handler: Callable[[ModelRequest], ModelResponse],
     ) -> ModelResponse:
@@ -37,13 +37,11 @@ class ModelRouterMiddleware(AgentMiddleware):
                 f"Groq failed after {retries} attempt(s) and no OPENAI_API_KEY is configured for fallback"
             ) from last_error
 
-        fallback_model = ChatOpenAI(model=self.fallback_model_name, api_key=settings.openai.api_key)
-
         try:
-            return handler(request.override(model=fallback_model))
+            return handler(request.override(model=self.fallback_model))
         except Exception as exc:
             raise RuntimeError(
-                f"Groq failed after {retries} attempt(s) and fallback to OpenAI model '{self.fallback_model_name}' also failed"
+                f"Groq failed after {retries} attempt(s) and fallback to OpenAI model '{self.fallback_model.model_name}' also failed"
             ) from (
                 last_error or exc
             )
